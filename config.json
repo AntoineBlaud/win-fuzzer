@@ -1,0 +1,10 @@
+{
+    "ida_root_dir" : "C:\\Program Files\\IDA Pro 7.6",
+    "libs_dir" :  "C:\\Users\\antoi\\Downloads\\libraries",
+    "headers_dir" : "C:\\Users\\antoi\\Downloads\\libraries",
+    "programs" : [
+        {"name": "notepad.exe", "path": "C:\\Windows\\System32\\notepad.exe"},
+        {"name": "windbg.exe", "path": "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\windbg.exe"},
+        {"name": "calc.exe", "path": "C:\\Windows\\System32\\calc.exe"}
+    ]
+}
