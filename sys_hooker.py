@@ -35,6 +35,10 @@ function func_includes(funcname, funclist) {
   return false
 }
 
+function mutate_n(n, ratio){
+  return n + Math.floor(Math.random() * ratio) - ratio/2;
+}
+
 function mutate_buf(ptr, size, arg_i) {
   let buf = Memory.readByteArray(ptr, size);
   let buf_view = new Uint8Array(buf);
@@ -45,7 +49,7 @@ function mutate_buf(ptr, size, arg_i) {
       if (Math.random() < 0.9) {
         new_buf_view[i] = buf_view[i];
       }else{
-        new_buf_view[i] = buf_view[i] + Math.floor(Math.random() * 10) - 5;
+        new_buf_view[i] = mutate_n(buf_view[i], 10)
         }
     }
   Memory.writeByteArray(ptr, new_buf_view);
@@ -56,23 +60,23 @@ function mutate_buf(ptr, size, arg_i) {
   console.log(new_buf);
 }
 
-function mutate_args(args, f_args_infos) {
-  for (let i = 0; i < f_args_infos.length; i++) {
-    let arg_info = f_args_infos[i].toLowerCase();
+function mutate_args(context, args, f_args_infos) {
+  let syscall_args = ["rcx", "rdx", "r8", "r9"];
+  for (let i = 0; i < args.length; i++) {
     if(Math.random() > 0.05){
         continue;
     }
-    if (arg_info.includes("in") && arg_info.includes("buf")) {
-      mutate_buf(args[i], 0x50, i);
+    if (Memory.readPointer(args[i]) != 0) {
+       mutate_buf(Memory.readPointer(args[i]), 0x100, i);
     }
-    else if (arg_info.includes("in") && arg_info.includes("*")) {
-      mutate_buf(args[i], 0x20, i);
-    }
-    else if (arg_info.includes("pvoid")) {
-      mutate_buf(args[i], 0x20 , i);
-    }
-    else if (arg_info.includes("_in_reads_")) {
-      mutate_buf(args[i], 0x50,);
+    else if (i < syscall_args.length) {
+        let reg_name = syscall_args[i];
+        // convert to int
+        let reg_val = parseInt(args[i]);
+        let new_val = mutate_n(reg_val, 10000);
+        context[reg_name] = new_val;
+        let hex_val = "0x" + new_val.toString(16);
+        console.log("Mutating " + reg_name + " from " + args[i] + " to " + hex_val);
     }
   }
 }
@@ -121,7 +125,7 @@ setTimeout(function() {
                   }
                   console.log("Arg " + i + ": " + " " + arg_info + " " + syscall_args[i]);
                 }
-                mutate_args(syscall_args, f_args_infos);
+                mutate_args(this.context, syscall_args, f_args_infos);
                 
               }
             });
@@ -186,14 +190,9 @@ def filter(sys_data):
     filtered_sys_data = {}
     for lib in sys_data:
         filtered_sys_data[lib] = {}
-        for f_name, f_info in sys_data[lib].items():
-            if not match_func_name(f_name):
-                print(f"Skipping {f_name}")
-                continue
-            args = f_info["args"]
-            if match(args):
-                filtered_sys_data[lib][f_name] = sys_data[lib][f_name]
-                print(f"Keeping {f_name}")
+        for f_name in sys_data[lib]:
+          if match_func_name(f_name):
+            filtered_sys_data[lib][f_name] = sys_data[lib][f_name]
     return filtered_sys_data
 
 
@@ -203,13 +202,29 @@ def replace_all(text, dic_vars):
     return text
 
 
-def build_script(dict_vars):
+def build_script(sys_data):
+    dict_vars = {
+        "$$sys_data$$": json.dumps(sys_data),
+    }
     script = replace_all(global_var, dict_vars)
     script += common
     script += process_module
+    with open("debug_script.js", "w") as f:
+        f.write(script)
     return script
   
-def async_launch(script, path, pids, i):
+def random_pick(funcs_map):
+    DESIRED_FUNCS = 100
+    r_funcs_map = {}
+    for lib in funcs_map:
+        p = (1 / len(funcs_map[lib])) * DESIRED_FUNCS
+        r_funcs_map[lib] = {}
+        for f_name, f_infos in funcs_map[lib].items():
+            if random.random() < p:
+              r_funcs_map[lib][f_name] = f_infos
+    return r_funcs_map
+  
+def async_launch(script, path):
     # spawn process and pause it
     try:
       pid = frida.spawn(path)
@@ -220,22 +235,23 @@ def async_launch(script, path, pids, i):
       time.sleep(1)
       print("Resuming {} with pid {}".format(path, pid))
       frida.resume(pid)
-      pids[i] = pid
     except Exception as e:
       pass
 
-def fuzzer_thread(script, process_to_fuzz):
+def fuzzer_thread(sys_data, process_to_fuzz):
 
     MAX_THREADS = 4
-    pids = [0] * MAX_THREADS
-    INTERVAL = 3
+    INTERVAL = 2
     exe = process_to_fuzz["name"]
     path = process_to_fuzz["path"]
     try:
         while True:
             for i in range(MAX_THREADS):
-                async_launch(script, path, pids, i)
-            # wait 15 seconds
+                # pick 100 random functions for each library
+                r_funcs_map = random_pick(filter(sys_data))
+                script = build_script(r_funcs_map)
+                async_launch(script, path)
+            # wait 
             time.sleep(INTERVAL)
             # detach and kill processes
             clean(exe)
@@ -263,15 +279,4 @@ args = parser.parse_args()
 sys_data = json.load(open(args.sys_data, "r"))
 programs = json.load(open(args.config, "r"))["programs"]
 process_to_fuzz = programs[args.p_index]
-
-
-sys_data = filter(sys_data)
-dict_vars = {
-    "$$sys_data$$": json.dumps(sys_data),
-}
-script = build_script(dict_vars)
-
-with open("debug_script.js", "w") as f:
-    f.write(script)
-
-fuzzer_thread(script, process_to_fuzz)
+fuzzer_thread(sys_data, process_to_fuzz)
