@@ -25,10 +25,10 @@ Before using Win-fuzzer, make sure you have the following dependencies installed
 python sys_scanner.py config.json syscalls.json
 ```
 
-4. Launch the system call hooker with the specified configuration and system call list. Optionally, provide the target program (e.g., `$PROG`) and choose a mutation level (0, 1, 2, 3, etc.).
+4. Launch the system call hooker with the specified configuration and system call list. Optionally, provide the target program (e.g., `$PROG`) (0, 1, 2, 3, etc.).
 
 ```bash
-python sys_hooker.py config.json syscalls.json $PROG 0
+python sys_hooker.py config.json syscalls.json $PROG
 ```
 
 Alternatively, you can use the provided batch file for convenience:
