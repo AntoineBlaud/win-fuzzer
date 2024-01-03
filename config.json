@@ -7,7 +7,6 @@
         {"name": "windbg.exe", "path": "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\windbg.exe"},
         {"name": "calc.exe", "path": "C:\\Windows\\System32\\calc.exe"},
         {"name": "false", "path": "C:\\Windows\\explorer.exe"},
-        {"name": "ida", "path": "C:\\Program Files\\IDA Pro 7.6\\ida64.exe"},
         {"name": "powershell", "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell_ise.exe"}
     ]
 }

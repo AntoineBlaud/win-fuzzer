@@ -242,7 +242,7 @@ def async_launch(script, path):
 def fuzzer_thread(sys_data, process_to_fuzz):
 
     MAX_THREADS = 1
-    INTERVAL = 1.5
+    INTERVAL = 2
     exe = process_to_fuzz["name"]
     path = process_to_fuzz["path"]
     try:
