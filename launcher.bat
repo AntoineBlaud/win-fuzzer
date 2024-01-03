@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM Set the ITER variable to the desired value
-set ITER=2
+set ITER=5
 
 REM Run the command in a loop until ITER is reached
 for /L %%i in (0,1,%ITER%) do (

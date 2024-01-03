@@ -62,7 +62,7 @@ function mutate_buf(ptr, size, arg_i) {
 function mutate_args(context, args, f_args_infos) {
   let syscall_args = ["rcx", "rdx", "r8", "r9"];
   for (let i = 0; i < args.length; i++) {
-    if (Math.random() < 0.1) {
+    if (Math.random() < 0.02) {
         try{
           Memory.readPointer(args[i]) 
           mutate_buf(Memory.readPointer(args[i]), 0x100, i);
@@ -241,8 +241,8 @@ def async_launch(script, path):
 
 def fuzzer_thread(sys_data, process_to_fuzz):
 
-    MAX_THREADS = 4
-    INTERVAL = 2
+    MAX_THREADS = 1
+    INTERVAL = 1.5
     exe = process_to_fuzz["name"]
     path = process_to_fuzz["path"]
     try:
