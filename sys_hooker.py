@@ -7,7 +7,6 @@ import threading
 import time
 import os
 
-# python frida_sys_interceptor.py lib_func_syscalls.json
 
 
 global_var = """
@@ -46,7 +45,7 @@ function mutate_buf(ptr, size, arg_i) {
   let new_buf = new ArrayBuffer(size);
   let new_buf_view = new Uint8Array(new_buf);
   for (let i = 0; i < size; i++) {
-      if (Math.random() < 0.9) {
+      if (Math.random() < 0.7) {
         new_buf_view[i] = buf_view[i];
       }else{
         new_buf_view[i] = mutate_n(buf_view[i], 10)
@@ -63,7 +62,7 @@ function mutate_buf(ptr, size, arg_i) {
 function mutate_args(context, args, f_args_infos) {
   let syscall_args = ["rcx", "rdx", "r8", "r9"];
   for (let i = 0; i < args.length; i++) {
-    if (Math.random() < 0.05) {
+    if (Math.random() < 0.1) {
         try{
           Memory.readPointer(args[i]) 
           mutate_buf(Memory.readPointer(args[i]), 0x100, i);
