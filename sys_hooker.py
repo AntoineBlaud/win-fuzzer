@@ -63,13 +63,10 @@ function mutate_buf(ptr, size, arg_i) {
 function mutate_args(context, args, f_args_infos) {
   let syscall_args = ["rcx", "rdx", "r8", "r9"];
   for (let i = 0; i < args.length; i++) {
-    if(Math.random() > 0.05){
-        continue;
-    }
-    if (Memory.readPointer(args[i]) != 0) {
+    if (Memory.readPointer(args[i]) != 0 && Math.random() < 0.05)) {
        mutate_buf(Memory.readPointer(args[i]), 0x100, i);
     }
-    else if (i < syscall_args.length) {
+    else if (i < syscall_args.length && && Math.random() < 0.01) {
         let reg_name = syscall_args[i];
         // convert to int
         let reg_val = parseInt(args[i]);
