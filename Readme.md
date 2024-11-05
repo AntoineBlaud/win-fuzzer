@@ -2,7 +2,7 @@
 
 ## Overview
 
-Win-fuzzer is a Windows fuzzing tool designed to efficiently discover vulnerabilities by launching and hooking system calls in `ntdll.dll` and `win32u.dll` using Frida. The tool allows you to modify buffer values and arguments through a mutation function to test the robustness of the target application.
+Win-fuzzer is a Windows fuzzing tool designed to efficiently discover vulnerabilities by launching and hooking system calls in `ntdll.dll` and `win32u.dll` using Frida. The tool allows you to modify buffer values and arguments through a mutation function to test the robustness of the target.
 
 ## Prerequisites
 
